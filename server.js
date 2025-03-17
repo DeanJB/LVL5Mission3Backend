@@ -1,7 +1,7 @@
 // Imports
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
 
 // Load environment variables
 dotenv.config();
@@ -16,13 +16,13 @@ app.use(express.json());
 
 // API
 app.get("/", (req, res) => {
-      res.json({ message: "Welcome to the Node.js Backend!" });
+  res.json({ message: "Welcome to the Node.js Backend!" });
 });
 
 // Server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 export default app;
