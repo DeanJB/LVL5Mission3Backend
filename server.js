@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import axios from "axios";
 import nodemailer from "nodemailer";
 
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 // Load env
 dotenv.config();
 
@@ -42,20 +44,16 @@ const sendEmail = (to, subject, text) => {
 };
 
 // Setup Gemini here
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
 const generateFeedback = async (jobTitle, userResponses) => {
       try {
-            const apiUrl = "https://api.geminiapi.com/feedback";
-            const response = await axios.post(apiUrl, {
-                  headers: {
-                        Authorization: `Bearer ${process.env.GEMINI_API_KEY}`,
-                  },
-                  data: {
-                        jobTitle,
-                        userResponses,
-                  },
-            });
-
-            return response.data;
+            const prompt = `Generate feedback for a ${jobTitle} based on user responses: ${JSON.stringify(
+                  userResponses
+            )}`;
+            const result = await model.generateContent(prompt);
+            return result.response.text();
       } catch (error) {
             console.error("Error generating AI feedback:", error);
             return { error: "Failure to generate AI feedback" };
@@ -94,12 +92,16 @@ app.post("/aiResponse", async (req, res) => {
       const { email, jobTitle } = req.body;
       const userResponses = interviewData[email]?.responses;
 
-      if (userResponses) {
+      if (userResponses && userResponses.length > 0) {
             const feedback = await generateFeedback(jobTitle, userResponses);
 
-            res.json({ question: feedback?.question });
+            if (feedback) {
+                  res.json({ feedback });
+            } else {
+                  res.status(400).json({ error: "Error generating feedback" });
+            }
       } else {
-            res.status(400).json({ error: "Error no response to question " });
+            res.status(400).json({ error: " Don't have users response " });
       }
 });
 
