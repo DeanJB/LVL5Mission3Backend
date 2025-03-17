@@ -57,14 +57,35 @@ async function sendUserMessage(history) {
   return { chatText, history };
 }
 
+async function lastAnswer() {
+  const rl2 = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const userInput2 = await new Promise((resolve) => {
+    rl2.question("Your response: ", (answer) => {
+      resolve(answer);
+      rl2.close();
+    });
+  });
+
+  // history.push({
+  //   role: "user",
+  //   parts: [{ text: userInput2 }],
+  // });
+}
+
 (async () => {
   for (let i = 0; i < 5; i++) {
-    const response = await sendUserMessage(history);
-    response.history.forEach((message) => {
-      console.log("-----");
-      console.log(`${message.role}: ${message.parts[0].text}`);
-    });
+    await sendUserMessage(history);
   }
+  await lastAnswer();
+
+  history.forEach((message) => {
+    console.log("-----");
+    console.log(`${message.role}: ${message.parts[0].text}`);
+  });
 })();
 
-module.exports = { sendUserMessage };
+module.exports = { sendUserMessage, lastAnswer };
