@@ -4,7 +4,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import axios from "axios";
 import nodemailer from "nodemailer";
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Load env
@@ -47,37 +46,109 @@ const sendEmail = (to, subject, text) => {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-const generateFeedback = async (jobTitle, userResponses) => {
-      try {
-            const prompt = `Generate feedback for a ${jobTitle} based on user responses: ${JSON.stringify(
-                  userResponses
-            )}`;
-            const result = await model.generateContent(prompt);
-            return result.response.text();
-      } catch (error) {
-            console.error("Error generating AI feedback:", error);
-            return { error: "Failure to generate AI feedback" };
-      }
-};
+// const generateFeedback = async (jobTitle, userResponses) => {
+//       try {
+//             const prompt = `Generate feedback for a ${jobTitle} based on user responses: ${JSON.stringify(
+//                   userResponses
+//             )}`;
+//             console.log("User responses:", userResponses);
+//             const result = await model.generateContent(prompt);
+//             return result.response.text();
+//       } catch (error) {
+//             console.error("Error generating AI feedback:", error);
+//             return { error: "Failure to generate AI feedback" };
+//       }
+// };
 
 let interviewData = {};
 
 // endpoint where interview will start
-app.post("/startInterview", (req, res) => {
-      const { email, jobTitle } = req.body;
-      console.log("Email recieved: ", email);
-      console.log("Job Title recieved: ", jobTitle);
+app.post("/startInterview", async (req, res) => {
+      try {
+            console.log("is the interview starting?");
+            const { email, jobTitle } = req.body;
+            console.log("Email recieved: ", email);
+            console.log("Job Title recieved: ", jobTitle);
+            // console.log("user Response aquired: ", req.body.userResponse);
+            const introduction = `Tell me about yourself and why you are interested in the ${jobTitle} position?`;
 
-      interviewData[email] = {
-            jobTitle: jobTitle,
-            responses: [],
-      };
+            const chat = model.startChat({
+                  history: [
+                        {
+                              role: "user",
+                              parts: [
+                                    {
+                                          text: `Hello, I am ${email} and I am interested in the ${jobTitle} position.`,
+                                    },
+                              ],
+                        },
+                        {
+                              role: "model",
+                              parts: [{ text: "Tell me about yourself" }],
+                        },
+                        {
+                              role: "user",
+                              parts: [{ text: introduction }],
+                        },
+                  ],
+            });
 
-      res.json({ message: "Interview begins! 😎😎" });
+            const result = await chat.sendMessage(introduction);
+            const aiResponse = result.response ? result.response.text() : result.text;
+
+            const nextQuestionResult = await chat.sendMessage("Ask me the first interview question.");
+            const aiNextQuestion = nextQuestionResult.response.text();
+
+            // console.log(chat);
+            chat.params.history.push({
+                  role: "model",
+                  parts: [{ text: aiNextQuestion }],
+            });
+
+            res.json({ message: "Interview started!", question: aiNextQuestion });
+      } catch (error) {
+            console.error("Error with interview:", error);
+            res.status(400).json({ error: "Interview failed" });
+      }
+});
+
+// nah we continue the interview
+app.post("/continueInterview", async (req, res) => {
+      try {
+            const { email, userResponse } = req.body;
+            if (!userResponse) {
+                  return res.status(400).json({ error: "Please provide a response" });
+            }
+
+            if (!chat) {
+                  return res.status(400).json({ error: "Interview not found, reload window" });
+            }
+
+            // Send user's response to AI
+            chat.history.push({
+                  role: "user",
+                  parts: [{ text: userResponse }],
+            });
+            const result = await chat.sendMessage("Ask me the next interview question.");
+            const aiNextResponse = result.response.text();
+
+            chat.history.push({
+                  role: "model",
+                  parts: [{ text: aiNextResponse }],
+            });
+
+            res.json({ question: aiNextResponse });
+
+            // Send response
+      } catch (error) {
+            console.error("Error continuing interview:", error);
+            res.status(500).json({ error: "Failed to continue interview." });
+      }
 });
 
 // endpoint to store responses
 app.post("/storeResponse", (req, res) => {
+      console.log("IS the store response working?");
       const { email, question, answer } = req.body;
 
       if (interviewData[email]) {
@@ -89,6 +160,7 @@ app.post("/storeResponse", (req, res) => {
 });
 
 app.post("/aiResponse", async (req, res) => {
+      console.log("Is the AI response working?");
       const { email, jobTitle } = req.body;
       const userResponses = interviewData[email]?.responses;
 
@@ -105,8 +177,9 @@ app.post("/aiResponse", async (req, res) => {
       }
 });
 
-// complete interviewe endpoint
+// complete interview endpoint
 app.post("/completedInterview", async (req, res) => {
+      console.log("Is this completed interview working?");
       const { email } = req.body;
       const userResponses = interviewData[email]?.responses;
 
