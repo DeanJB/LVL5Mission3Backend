@@ -12,24 +12,37 @@ const model = genAI.getGenerativeModel({
     "You are a mock interviewer. Your goal is to ask the user questions to understand their experience and skills for the given job they are applying for without giving them hints when asking the questions.",
 });
 
-let history = [
-  {
-    role: "user",
-    parts: [{ text: "Job Title: Junior Developer" }],
-  },
-  {
-    role: "model",
-    parts: [{ text: "Tell me about yourself." }],
-  },
-  {
-    role: "user",
-    parts: [
-      {
-        text: "I'm passionate about software development. I joined Mission Ready earlier this year, and decided to switch from a chef to a full time software developer.",
-      },
-    ],
-  },
-];
+async function getJobTitle() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const jobTitle = await new Promise((resolve) => {
+    rl.question("Enter Job Title: ", (answer) => {
+      resolve(answer);
+      rl.close();
+    });
+  });
+
+  return jobTitle;
+}
+
+async function getUserIntroduction() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const introduction = await new Promise((resolve) => {
+    rl.question("Tell me about yourself: ", (answer) => {
+      resolve(answer);
+      rl.close();
+    });
+  });
+
+  return introduction;
+}
 
 async function sendUserMessage(history) {
   let chatText = "";
@@ -77,8 +90,30 @@ async function lastAnswer() {
 }
 
 (async () => {
+  const jobTitle = await getJobTitle();
+  const introduction = await getUserIntroduction();
+
+  let history = [
+    {
+      role: "user",
+      parts: [{ text: `Job Title: ${jobTitle}` }],
+    },
+    {
+      role: "model",
+      parts: [{ text: "Tell me about yourself." }],
+    },
+    {
+      role: "user",
+      parts: [{ text: introduction }],
+    },
+  ];
+
   for (let i = 0; i < 5; i++) {
-    await sendUserMessage(history);
+    const { chatText, updatedHistory } = await sendUserMessage(history);
+    history.push({
+      role: "user",
+      parts: [{ text: chatText }],
+    });
   }
   await lastAnswer();
 
@@ -87,5 +122,3 @@ async function lastAnswer() {
     console.log(`${message.role}: ${message.parts[0].text}`);
   });
 })();
-
-module.exports = { sendUserMessage, lastAnswer };
