@@ -115,7 +115,9 @@ async function lastAnswer(history) {
 
   await firstQuestion(history, introduction);
 
-  for (let i = 0; i < 5; i++) {
+  const numberOfQuestions = 5;
+
+  for (let i = 0; i < numberOfQuestions; i++) {
     const { chatText, updatedHistory } = await sendUserMessage(history);
   }
   await lastAnswer(history);
