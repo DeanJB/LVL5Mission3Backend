@@ -70,10 +70,10 @@ async function lastAnswer() {
     });
   });
 
-  // history.push({
-  //   role: "user",
-  //   parts: [{ text: userInput2 }],
-  // });
+  history.push({
+    role: "user",
+    parts: [{ text: userInput2 }],
+  });
 }
 
 (async () => {
