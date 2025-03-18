@@ -44,6 +44,15 @@ async function getUserIntroduction() {
   return introduction;
 }
 
+async function firstQuestion(history, introduction) {
+  const chat = model.startChat({
+    history: history,
+  });
+
+  let result = await chat.sendMessage(introduction);
+  console.log(result.response.text());
+}
+
 async function sendUserMessage(history) {
   let chatText = "";
 
@@ -70,7 +79,7 @@ async function sendUserMessage(history) {
   return { chatText, history };
 }
 
-async function lastAnswer() {
+async function lastAnswer(history) {
   const rl2 = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -102,20 +111,14 @@ async function lastAnswer() {
       role: "model",
       parts: [{ text: "Tell me about yourself." }],
     },
-    {
-      role: "user",
-      parts: [{ text: introduction }],
-    },
   ];
+
+  await firstQuestion(history, introduction);
 
   for (let i = 0; i < 5; i++) {
     const { chatText, updatedHistory } = await sendUserMessage(history);
-    history.push({
-      role: "user",
-      parts: [{ text: chatText }],
-    });
   }
-  await lastAnswer();
+  await lastAnswer(history);
 
   history.forEach((message) => {
     console.log("-----");
