@@ -11,7 +11,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
     "cors": "^2.8.5",
@@ -20,5 +19,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DeanJB/LVL5Mission3Backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DeanJB/LVL5Mission3Backend/issues"
+  },
+  "homepage": "https://github.com/DeanJB/LVL5Mission3Backend#readme"
 }
