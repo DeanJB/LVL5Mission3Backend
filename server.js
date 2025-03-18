@@ -1,4 +1,3 @@
-// Imports
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -16,13 +15,13 @@ app.use(express.json());
 
 // API
 app.get("/", (req, res) => {
-      res.json({ message: "Welcome to the Node.js Backend!" });
+  res.json({ message: "Welcome to the Node.js Backend!" });
 });
 
 // Server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 export default app;
