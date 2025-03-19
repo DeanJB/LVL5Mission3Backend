@@ -12,7 +12,7 @@ const model = genAI.getGenerativeModel({
     "You are a mock interviewer. Your goal is to ask the user questions to understand their experience and skills for the given job they are applying for without giving them hints when asking the questions.",
 });
 
-async function getJobTitle() {
+export async function getJobTitle() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -28,7 +28,7 @@ async function getJobTitle() {
   return jobTitle;
 }
 
-async function getUserIntroduction() {
+export async function getUserIntroduction() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -44,7 +44,7 @@ async function getUserIntroduction() {
   return introduction;
 }
 
-async function firstQuestion(history, introduction) {
+export async function firstQuestion(history, introduction) {
   const chat = model.startChat({
     history: history,
   });
@@ -53,23 +53,11 @@ async function firstQuestion(history, introduction) {
   console.log(result.response.text());
 }
 
-async function sendUserMessage(history) {
+export async function sendUserMessage(history, userInput) {
   let chatText = "";
 
   const chat = model.startChat({
     history: history,
-  });
-
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const userInput = await new Promise((resolve) => {
-    rl.question("Your response: ", (answer) => {
-      resolve(answer);
-      rl.close();
-    });
   });
 
   let result = await chat.sendMessage(userInput);
@@ -79,7 +67,7 @@ async function sendUserMessage(history) {
   return { chatText, history };
 }
 
-async function lastAnswer(history) {
+export async function lastAnswer(history) {
   const rl2 = readline.createInterface({
     input: process.stdin,
     output: process.stdout,

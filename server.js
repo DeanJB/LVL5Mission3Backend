@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { sendUserMessage } from "./interviewQuestions.js";
 
 // Load environment variables
 dotenv.config();
@@ -28,9 +29,24 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Node.js Backend!" });
 });
 
-app.post("/app/simulate", async (req, res) => {
-  const question = req.body.question;
+// app.post("/app/simulate", async (req, res) => {
+//   const question = req.body.question;
 
+//   try {
+//     const chat = model.startChat({
+//       history: history,
+//     });
+
+//     const result = await chat.sendMessage(question);
+
+//     res.json({ response: result.response.text() });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+app.post("/startInterview", async (req, res) => {
+  const question = req.body.question;
   try {
     const chat = model.startChat({
       history: history,
@@ -39,6 +55,18 @@ app.post("/app/simulate", async (req, res) => {
     const result = await chat.sendMessage(question);
 
     res.json({ response: result.response.text() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/interview", async (req, res) => {
+  const question = req.body.question;
+  console.log(question);
+  try {
+    const { chatText } = await sendUserMessage(history, question);
+
+    res.status(200).json({ response: chatText });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
