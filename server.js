@@ -20,7 +20,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
   model: "gemini-2.0-flash",
   systemInstruction:
-    "You are a mock interviewer. Your goal is to ask the user questions to understand their experience and skills for the given job they are applying for without giving them hints when asking the questions. First ask them about themselves then ask 6 questions and after finishing those questions give feedback on the interview.",
+    "You are a mock interviewer. Your goal is to ask the user questions to understand their experience and skills for the given job they are applying for without giving them hints when asking the questions. First ask them about themselves then ask 5 questions and after finishing those questions give feedback on the interview.",
 });
 
 let history = [];
@@ -57,6 +57,8 @@ app.post("/app/simulate", async (req, res) => {
 
 app.post("/startInterview", async (req, res) => {
   const question = req.body.question;
+  console.log("start");
+  history = [];
   try {
     const chat = model.startChat({
       history: history,
