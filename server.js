@@ -13,6 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // Setup Gemini here
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -25,8 +26,17 @@ const model = genAI.getGenerativeModel({
 let history = [];
 
 // API
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to the Node.js Backend!" });
+app.post("/app/simulate", async (req, res) => {
+  const { question } = req.body;
+  try {
+    const chat = model.startChat({
+      history: [{ role: "user", parts: [{ text: question }] }],
+    });
+    const result = await chat.sendMessage(question);
+    res.json({ response: result.response.text() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // app.post("/app/simulate", async (req, res) => {
