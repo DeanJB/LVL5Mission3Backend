@@ -1,6 +1,6 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const dotenv = require("dotenv");
-const readline = require("readline");
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from "dotenv";
+import readline from "readline";
 
 dotenv.config();
 
@@ -12,61 +12,55 @@ const model = genAI.getGenerativeModel({
             "You are a mock interviewer. Your goal is to ask the user questions to understand their experience and skills for the given job they are applying for without giving them hints when asking the questions.",
 });
 
-async function getJobTitle() {
-      const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-      });
+export async function getJobTitle() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-      const jobTitle = await new Promise((resolve) => {
-            rl.question("Enter Job Title: ", (answer) => {
-                  resolve(answer);
-                  rl.close();
-            });
-      });
+  const jobTitle = await new Promise((resolve) => {
+    rl.question("Enter Job Title: ", (answer) => {
+      resolve(answer);
+      rl.close();
+    });
+  });
 
-      return jobTitle;
+  return jobTitle;
 }
 
-async function getUserIntroduction() {
-      const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-      });
+export async function getUserIntroduction() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-      const introduction = await new Promise((resolve) => {
-            rl.question("Tell me about yourself: ", (answer) => {
-                  resolve(answer);
-                  rl.close();
-            });
-      });
+  const introduction = await new Promise((resolve) => {
+    rl.question("Tell me about yourself: ", (answer) => {
+      resolve(answer);
+      rl.close();
+    });
+  });
 
-      return introduction;
+  return introduction;
 }
 
-async function firstQuestion(history, introduction) {
-      const chat = model.startChat({
-            history: history,
-      });
+export async function firstQuestion(history, introduction) {
+  const chat = model.startChat({
+    history: history,
+  });
+
 
       let result = await chat.sendMessage(introduction);
       console.log(result.response.text());
 }
 
+
 async function sendUserMessage(history) {
       const chat = model.startChat({ history });
-
-      const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
       });
 
-      const userInput = await new Promise((resolve) => {
-            rl.question("Your response: ", (answer) => {
-                  resolve(answer);
-                  rl.close();
-            });
-      });
+
+
 
       const result = await chat.sendMessage(userInput);
       console.log(result.response.text());
@@ -74,28 +68,30 @@ async function sendUserMessage(history) {
       history.push({ role: "user", parts: [{ text: userInput }] });
       history.push({ role: "model", parts: [{ text: result.response.text() }] });
 
+  let result = await chat.sendMessage(userInput);
+  console.log(result.response.text());
+
+
       return { chatText: result.response.text(), history };
 }
 
-async function lastAnswer(history) {
-      const rl2 = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-      });
+export async function lastAnswer(history) {
+  const rl2 = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-      const userInput2 = await new Promise((resolve) => {
-            rl2.question("Your response: ", (answer) => {
-                  resolve(answer);
-                  rl2.close();
-            });
-      });
+  const userInput2 = await new Promise((resolve) => {
+    rl2.question("Your response: ", (answer) => {
+      resolve(answer);
+      rl2.close();
+    });
+  });
 
-      history.push({
-            role: "user",
-            parts: [{ text: userInput2 }],
-      });
-
-      return history; // Return updated history
+  history.push({
+    role: "user",
+    parts: [{ text: userInput2 }],
+  });
 }
 
 (async () => {

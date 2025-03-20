@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { sendUserMessage } from "./interviewQuestions.js";
+
 
 // Load environment variables
 dotenv.config();
@@ -13,64 +15,17 @@ app.use(cors());
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
+
 // Setup Gemini here
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const model = genAI.getGenerativeModel({
+
       model: "gemini-2.0-flash",
       systemInstruction:
             "You are a mock interviewer. Your goal is to ask the user questions to understand their experience and skills for the given job they are applying for without giving them hints when asking the questions. After the interview, provide a concise review in no more than two sentences, including feedback, a rating out of 10, and suggestions for improvement.",
 });
 
-// Hardcoded email for now - not using anymore
-const hardcodedEmail = "sp33drunners@gmail.com";
-
-const validateMessages = (messages) => {
-      messages.forEach((message, index) => {
-            if (!message.role || !message.content) {
-                  throw new Error(`Message at index ${index} is missing required fields: role or content`);
-            }
-            // Removed strict role validation
-            console.log(`Accepted role: ${message.role}`);
-      });
-};
-
-const sanitizeMessages = (messages) => {
-      return messages.map((msg) => ({
-            role: msg.role.toLowerCase() === "ai" ? "model" : "user",
-            content: msg.content,
-            metadata: { jobTitle: msg.role },
-      }));
-};
-
-// Removed question tracker
-
-// API
-app.post("/app/simulate", async (req, res) => {
-      const { question } = req.body;
-      try {
-            if (!question || typeof question !== "string") {
-                  throw new Error("Invalid or missing 'question' in request body");
-            }
-
-            const chat = model.startChat({
-                  history: [{ role: "user", parts: [{ text: question }] }],
-            });
-
-            const result = await chat.sendMessage(question);
-
-            if (!result || !result.response) {
-                  throw new Error("No response from Gemini API");
-            }
-
-            const responseText = result.response?.text ? result.response.text() : "No response available";
-
-            res.json({ response: responseText });
-      } catch (error) {
-            console.error("Error in /app/simulate:", error.message);
-            res.status(500).json({ error: error.message });
-      }
-});
 
 async function generateFeedback(messages) {
       console.log("Received messages", messages);
@@ -137,6 +92,51 @@ app.post("/completeInterview", async (req, res) => {
             console.error("Error in /completeInterview:", error);
             res.status(500).json({ error: "Failed to complete interview" });
       }
+
+let history = [];
+
+// API
+app.post("/app/simulate", async (req, res) => {
+  const { question } = req.body;
+  try {
+    const chat = model.startChat({
+      history: [{ role: "user", parts: [{ text: question }] }],
+    });
+    const result = await chat.sendMessage(question);
+    res.json({ response: result.response.text() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/startInterview", async (req, res) => {
+  const question = req.body.question;
+  console.log("start");
+  history = [];
+  try {
+    const chat = model.startChat({
+      history: history,
+    });
+
+    const result = await chat.sendMessage(question);
+
+    res.json({ response: result.response.text() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/interview", async (req, res) => {
+  const question = req.body.question;
+  console.log(question);
+  try {
+    const { chatText } = await sendUserMessage(history, question);
+
+    res.status(200).json({ response: chatText });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
 });
 
 // Server
